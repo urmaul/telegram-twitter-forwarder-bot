@@ -48,7 +48,7 @@ class FetchAndSendTweetsJob(Job):
         self.logger.debug("Fetching tweets...")
         tweet_rows = []
         # fetch the tw users' tweets
-        tg_chats = list(TelegramChat.select())
+        tg_chats = list(TelegramChat.select().where(TelegramChat.twitter_secret != None))
         # updated_tw_users = []
         # users_to_cleanup = []
 
