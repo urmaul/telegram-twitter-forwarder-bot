@@ -33,6 +33,7 @@ class TelegramChat(Model):
     twitter_request_token = CharField(null=True)
     twitter_token = CharField(null=True)
     twitter_secret = CharField(null=True)
+    last_tweet_id = BigIntegerField(default=0)
     timezone_name = CharField(null=True)
     delete_soon = BooleanField(default=False)
 
@@ -54,18 +55,9 @@ class TelegramChat(Model):
         return tweepy.API(auth)
 
 
-class Subscription(Model):
-    tg_chat = ForeignKeyField(TelegramChat, related_name="subscriptions")
-    tw_user = ForeignKeyField(TwitterUser, related_name="subscriptions")
-    known_at = DateTimeField(default=datetime.datetime.now)
-    last_tweet_id = BigIntegerField(default=0)
-
-    @property
-    def last_tweet(self):
-        if self.last_tweet_id == 0:
-            return None
-
-        return Tweet.get(Tweet.tw_id == self.last_tweet_id)
+    # tg_chat = ForeignKeyField(TelegramChat, related_name="subscriptions")
+    # tw_user = ForeignKeyField(TwitterUser, related_name="subscriptions")
+    # known_at = DateTimeField(default=datetime.datetime.now)
 
 
 class Tweet(Model):
@@ -73,20 +65,22 @@ class Tweet(Model):
     known_at = DateTimeField(default=datetime.datetime.now)
     text = TextField()
     created_at = DateTimeField()
-    twitter_user = ForeignKeyField(TwitterUser, related_name='tweets')
+    # twitter_user = ForeignKeyField(TwitterUser, related_name='tweets')
+    twitter_user_name = TextField(default='')
+    twitter_user_screen_name = TextField(default='')
     photo_url = TextField(default='')
 
     @property
     def screen_name(self):
-        return self.twitter_user.screen_name
+        return self.twitter_user_screen_name
 
     @property
     def name(self):
-        return self.twitter_user.name
+        return self.twitter_user_name
 
 
 # Create tables
-for t in (TwitterUser, TelegramChat, Tweet, Subscription):
+for t in (TelegramChat, Tweet):
     t.create_table(fail_silently=True)
 
 
@@ -95,12 +89,13 @@ db = SqliteDatabase('peewee.db', timeout=10)
 migrator = SqliteMigrator(db)
 operations = [
     migrator.add_column('tweet', 'photo_url', Tweet.photo_url),
-    migrator.add_column('twitteruser', 'last_fetched', TwitterUser.last_fetched),
     migrator.add_column('telegramchat', 'twitter_request_token', TelegramChat.twitter_request_token),
     migrator.add_column('telegramchat', 'twitter_token', TelegramChat.twitter_token),
     migrator.add_column('telegramchat', 'twitter_secret', TelegramChat.twitter_secret),
     migrator.add_column('telegramchat', 'timezone_name', TelegramChat.timezone_name),
     migrator.add_column('telegramchat', 'delete_soon', TelegramChat.delete_soon),
+    migrator.add_column('telegramchat', 'last_tweet_id', TelegramChat.last_tweet_id),
+    migrator.add_column('tweet', 'twitter_user_name', Tweet.twitter_user_name),
 ]
 for op in operations:
     try:

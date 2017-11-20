@@ -6,7 +6,7 @@ from pytz import timezone, utc
 from telegram import Bot
 from telegram.error import TelegramError
 
-from models import TelegramChat, TwitterUser
+from models import TelegramChat
 from util import escape_markdown, prepare_tweet_text
 
 
@@ -45,9 +45,9 @@ class TwitterForwarderBot(Bot):
                 chat_id=chat.chat_id,
                 disable_web_page_preview=not photo_url,
                 text="""
-{link_preview}*{name}* ([@{screen_name}](https://twitter.com/{screen_name})) at {created_at}:
+{link_preview}*{name}* ([@{screen_name}](https://twitter.com/{screen_name})):
 {text}
--- [Link to this Tweet](https://twitter.com/{screen_name}/status/{tw_id})
+-- [{created_at}](https://twitter.com/{screen_name}/status/{tw_id})
 """
                     .format(
                     link_preview=photo_url,
@@ -83,23 +83,3 @@ class TwitterForwarderBot(Bot):
             tg_type=tg_chat.type,
         )
         return db_chat
-
-    def get_tw_user(self, tw_username):
-        try:
-            tw_user = self.tw.get_user(tw_username)
-        except tweepy.error.TweepError:
-            return None
-
-        db_user, _created = TwitterUser.get_or_create(
-            screen_name=tw_user.screen_name,
-            defaults={
-                'name': tw_user.name,
-            },
-        )
-
-        if not _created:
-            if db_user.name != tw_user.name:
-                db_user.name = tw_user.name
-                db_user.save()
-
-        return db_user

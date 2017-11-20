@@ -3,3 +3,4 @@ env/
 
 __pycache__/
 peewee.db
+.secrets.env

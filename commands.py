@@ -9,7 +9,7 @@ import tweepy
 from tweepy.auth import OAuthHandler
 from tweepy.error import TweepError
 
-from models import Subscription
+#from models import Subscription
 from util import with_touched_chat, escape_markdown, markdown_twitter_usernames
 
 TIMEZONE_LIST_URL = "https://en.wikipedia.org/wiki/List_of_tz_database_time_zones"
@@ -50,145 +50,9 @@ This bot is being worked on, so it may break sometimes. Contact @franciscod if y
                   disable_web_page_preview=True,
                   parse_mode=telegram.ParseMode.MARKDOWN)
 
-
-@with_touched_chat
-def cmd_sub(bot, update, args, chat=None):
-    if len(args) < 1:
-        bot.reply(update, "Use /sub username1 username2 username3 ...")
-        return
-    tw_usernames = args
-    not_found = []
-    already_subscribed = []
-    successfully_subscribed = []
-
-    for tw_username in tw_usernames:
-        tw_user = bot.get_tw_user(tw_username)
-
-        if tw_user is None:
-            not_found.append(tw_username)
-            continue
-
-        if Subscription.select().where(
-                Subscription.tw_user == tw_user,
-                Subscription.tg_chat == chat).count() == 1:
-            already_subscribed.append(tw_user.full_name)
-            continue
-
-        Subscription.create(tg_chat=chat, tw_user=tw_user)
-        successfully_subscribed.append(tw_user.full_name)
-
-    reply = ""
-
-    if len(not_found) is not 0:
-        reply += "Sorry, I didn't find username{} {}\n\n".format(
-                     "" if len(not_found) is 1 else "s",
-                     ", ".join(not_found)
-                 )
-
-    if len(already_subscribed) is not 0:
-        reply += "You're already subscribed to {}\n\n".format(
-                     ", ".join(already_subscribed)
-                 )
-
-    if len(successfully_subscribed) is not 0:
-        reply += "I've added your subscription to {}".format(
-                     ", ".join(successfully_subscribed)
-                 )
-
-    bot.reply(update, reply)
-
-
-@with_touched_chat
-def cmd_unsub(bot, update, args, chat=None):
-    if len(args) < 1:
-        bot.reply(update, "Use /unsub username1 username2 username3 ...")
-        return
-    tw_usernames = args
-    not_found = []
-    successfully_unsubscribed = []
-
-    for tw_username in tw_usernames:
-        tw_user = bot.get_tw_user(tw_username)
-
-        if tw_user is None or Subscription.select().where(
-                Subscription.tw_user == tw_user,
-                Subscription.tg_chat == chat).count() == 0:
-            not_found.append(tw_username)
-            continue
-
-        Subscription.delete().where(
-            Subscription.tw_user == tw_user,
-            Subscription.tg_chat == chat).execute()
-
-        successfully_unsubscribed.append(tw_user.full_name)
-
-    reply = ""
-
-    if len(not_found) is not 0:
-        reply += "I didn't find any subscription to {}\n\n".format(
-                     ", ".join(not_found)
-                 )
-
-    if len(successfully_unsubscribed) is not 0:
-        reply += "You are no longer subscribed to {}".format(
-                     ", ".join(successfully_unsubscribed)
-        )
-
-    bot.reply(update, reply)
-
-
-@with_touched_chat
-def cmd_list(bot, update, chat=None):
-    subscriptions = list(Subscription.select().where(
-                         Subscription.tg_chat == chat))
-
-    if len(subscriptions) == 0:
-        return bot.reply(update, 'You have no subscriptions yet! Add one with /sub username')
-
-    subs = ['']
-    for sub in subscriptions:
-        subs.append(sub.tw_user.full_name)
-
-    subject = "This group is" if chat.is_group else "You are"
-
-    bot.reply(
-        update,
-        subject + " subscribed to the following Twitter users:\n" +
-        "\n - ".join(subs) + "\n\nYou can remove any of them using /unsub username")
-
-
-@with_touched_chat
-def cmd_export(bot, update, chat=None):
-    subscriptions = list(Subscription.select().where(
-                         Subscription.tg_chat == chat))
-
-    if len(subscriptions) == 0:
-        return bot.reply(update, 'You have no subscriptions yet! Add one with /sub username')
-
-    subs = ['']
-    for sub in subscriptions:
-        subs.append(sub.tw_user.screen_name)
-
-    subject = "Use this to subscribe to all subscribed Twitter users in another chat:\n\n"
-
-    bot.reply(
-        update,
-        subject + "/sub " + " ".join(subs))
-
-
 @with_touched_chat
 def cmd_wipe(bot, update, chat=None):
-    subscriptions = list(Subscription.select().where(
-                         Subscription.tg_chat == chat))
-
-    subs = "You had no subscriptions."
-    if subscriptions:
-        subs = ''.join([
-            "For the record, you were subscribed to these users: ",
-            ', '.join((s.tw_user.screen_name for s in subscriptions)),
-            '.'])
-
-    bot.reply(update, "Okay, I'm forgetting about this chat. " + subs +
+    bot.reply(update, "Okay, I'm forgetting about this chat. " +
                     " Come back to me anytime you want. Goodbye!")
     chat.delete_instance(recursive=True)
 
@@ -200,32 +64,32 @@ def cmd_source(bot, update, chat=None):
                     "https://github.com/franciscod/telegram-twitter-forwarder-bot")
 
 
-@with_touched_chat
-def cmd_all(bot, update, chat=None):
-    subscriptions = list(Subscription.select().where(
-                         Subscription.tg_chat == chat))
+# @with_touched_chat
+# def cmd_all(bot, update, chat=None):
+#     subscriptions = list(Subscription.select().where(
+#                          Subscription.tg_chat == chat))
 
-    if len(subscriptions) == 0:
-        return bot.reply(update, 'You have no subscriptions, so no tweets to show!')
+#     if len(subscriptions) == 0:
+#         return bot.reply(update, 'You have no subscriptions, so no tweets to show!')
 
-    text = ""
+#     text = ""
 
-    for sub in subscriptions:
-        if sub.last_tweet is None:
-            text += "\n{screen_name}: <no tweets yet>".format(
-                screen_name=escape_markdown(sub.tw_user.screen_name),
-            )
-        else:
-            text += ("\n{screen_name}:\n{text} "
-                     "[link](https://twitter.com/{screen_name}/status/{tw_id})").format(
-                text=markdown_twitter_usernames(escape_markdown(sub.last_tweet.text)),
-                tw_id=sub.last_tweet.tw_id,
-                screen_name=escape_markdown(sub.tw_user.screen_name),
-            )
+#     for sub in subscriptions:
+#         if sub.last_tweet is None:
+#             text += "\n{screen_name}: <no tweets yet>".format(
+#                 screen_name=escape_markdown(sub.tw_user.screen_name),
+#             )
+#         else:
+#             text += ("\n{screen_name}:\n{text} "
+#                      "[link](https://twitter.com/{screen_name}/status/{tw_id})").format(
+#                 text=markdown_twitter_usernames(escape_markdown(sub.last_tweet.text)),
+#                 tw_id=sub.last_tweet.tw_id,
+#                 screen_name=escape_markdown(sub.tw_user.screen_name),
+#             )
 
-    bot.reply(update, text,
-              disable_web_page_preview=True,
-              parse_mode=telegram.ParseMode.MARKDOWN)
+#     bot.reply(update, text,
+#               disable_web_page_preview=True,
+#               parse_mode=telegram.ParseMode.MARKDOWN)
 
 
 @with_touched_chat
