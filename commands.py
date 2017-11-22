@@ -31,11 +31,9 @@ def cmd_help(bot, update, chat=None):
         bot.reply(update, """
 Hello! This bot forwards you updates from twitter streams!
 Here's the commands:
-- /export - sends you a /sub command that contains all current subscriptions
 - /wipe - remove all the data about you and your subscriptions
 - /auth - start Twitter authorization process
 - /verify - send Twitter verifier code to complete authorization process
-- /export\_friends - generate /sub command to subscribe to all your Twitter friends (authorization required)
 - /set\_timezone - set your [timezone name]({}) (for example Asia/Tokyo)
 - /source - info about source code
 - /help - view help text
@@ -95,21 +93,6 @@ def cmd_verify(bot, update, args, chat):
     settings = api.get_settings()
     tz_name = settings.get("time_zone", {}).get("tzinfo_name")
     cmd_set_timezone(bot, update, [tz_name])
-
-
-@with_touched_chat
-def cmd_export_friends(bot, update, chat):
-    if not chat.is_authorized:
-        if not chat.twitter_request_token:
-            bot.reply(update, "You have not authorized yet. Use /auth to do it")
-        else:
-            bot.reply(update, "You have not verified your authorization yet. Use /verify code to do it")
-        return
-    bot_auth = bot.tw.auth
-    api = chat.tw_api(bot_auth.consumer_key, bot_auth.consumer_secret)
-    screen_names = [f.screen_name for f in tweepy.Cursor(api.friends).items()]
-    bot.reply(update, "Use this to subscribe to all your Twitter friends:")
-    bot.reply(update, "/sub {}".format(" ".join(screen_names)))
 
 
 @with_touched_chat
