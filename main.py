@@ -49,7 +49,6 @@ if __name__ == '__main__':
     dispatcher.add_handler(CommandHandler('start', cmd_start))
     dispatcher.add_handler(CommandHandler('help', cmd_help))
     dispatcher.add_handler(CommandHandler('ping', cmd_ping))
-    # dispatcher.add_handler(CommandHandler('all', cmd_all))
     dispatcher.add_handler(CommandHandler('wipe', cmd_wipe))
     dispatcher.add_handler(CommandHandler('source', cmd_source))
     dispatcher.add_handler(CommandHandler('auth', cmd_get_auth_url))

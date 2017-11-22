@@ -47,10 +47,8 @@ class FetchAndSendTweetsJob(Job):
     def run(self, bot):
         self.logger.debug("Fetching tweets...")
         tweet_rows = []
-        # fetch the tw users' tweets
+        # fetch the tg users' home timelines
         tg_chats = list(TelegramChat.select().where(TelegramChat.twitter_secret != None))
-        # updated_tw_users = []
-        # users_to_cleanup = []
 
         for tg_chat in tg_chats:
             bot_auth = bot.tw.auth
@@ -66,7 +64,6 @@ class FetchAndSendTweetsJob(Job):
                     self.logger.debug(
                         "Fetching new tweets from {}".format(tg_chat.last_tweet_id))
                     tweets = tw_api.home_timeline(since_id=tg_chat.last_tweet_id, tweet_mode='extended')
-                # updated_tw_users.append(tw_user)
             except tweepy.error.TweepError as e:
                 sc = e.response.status_code
                 if sc == 429:
@@ -113,16 +110,6 @@ class FetchAndSendTweetsJob(Job):
                     twitter_user_screen_name=tweet.author.screen_name,
                     photo_url=photo_url
                 )
-                # try:
-                #     t = Tweet.get(Tweet.tw_id == tweet.id)
-                #     self.logger.warning("Got duplicated tw_id on this tweet:")
-                #     self.logger.warning(str(tw_data))
-                # except Tweet.DoesNotExist:
-                #     tweet_rows.append(tw_data)
-
-                # if len(tweet_rows) >= self.TWEET_BATCH_INSERT_COUNT:
-                #     Tweet.insert_many(tweet_rows).execute()
-                #     tweet_rows = []
 
                 # save the latest tweet sent to chat
                 self.logger.debug("- Setting id: {}".format(tweet.id))
@@ -131,98 +118,6 @@ class FetchAndSendTweetsJob(Job):
                 bot.send_tweet(tg_chat, t)
 
             tg_chat.save()
-
-        # TwitterUser.update(last_fetched=datetime.now()) \
-        #     .where(TwitterUser.id << [tw.id for tw in updated_tw_users]).execute()
-
-        # if not updated_tw_users:
-        #     return
-
-        # if tweet_rows:
-        #     Tweet.insert_many(tweet_rows).execute()
-
-        # send the new tweets to subscribers
-        # subscriptions = list(Subscription.select()
-        #                      .where(Subscription.tw_user << updated_tw_users))
-        # for s in subscriptions:
-        #     # are there new tweets? send em all!
-        #     self.logger.debug(
-        #         "Checking subscription {} {}".format(s.tg_chat.chat_id, s.tw_user.screen_name))
-
-        #     if s.last_tweet_id == 0:  # didn't receive any tweet yet
-        #         try:
-        #             tw = s.tw_user.tweets.select() \
-        #                 .order_by(Tweet.tw_id.desc()) \
-        #                 .first()
-        #             if tw is None:
-        #                 self.logger.warning("Something fishy is going on here...")
-        #             else:
-        #                 bot.send_tweet(s.tg_chat, tw)
-        #                 # save the latest tweet sent on this subscription
-        #                 s.last_tweet_id = tw.tw_id
-        #                 s.save()
-        #         except IndexError:
-        #             self.logger.debug("- No tweets available yet on {}".format(s.tw_user.screen_name))
-
-        #         continue
-
-        #     if s.tw_user.last_tweet_id > s.last_tweet_id:
-        #         self.logger.debug("- Some fresh tweets here!")
-        #         for tw in (s.tw_user.tweets.select()
-        #                             .where(Tweet.tw_id > s.last_tweet_id)
-        #                             .order_by(Tweet.tw_id.asc())
-        #                    ):
-        #             bot.send_tweet(s.tg_chat, tw)
-
-        #         # save the latest tweet sent on this subscription
-        #         s.last_tweet_id = s.tw_user.last_tweet_id
-        #         s.save()
-        #         continue
-
-        #     self.logger.debug("- No new tweets here.")
-
-
-        # self.logger.debug("Starting tw_user cleanup")
-        # if not users_to_cleanup:
-        #     self.logger.debug("- Nothing to cleanup")
-        # else:
-        #     for tw_user, reason in users_to_cleanup:
-        #         self.logger.debug("- Cleaning up subs on user @{}, {}".format(tw_user.screen_name, reason))
-        #         message = INFO_CLEANUP[reason].format(tw_user.screen_name)
-        #         subs = list(tw_user.subscriptions)
-        #         for s in subs:
-        #             chat = s.tg_chat
-        #             if chat.delete_soon:
-        #                 self.logger.debug ("- - skipping because of delete_soon chatid={}".format(chat_id))
-        #                 continue
-        #             chat_id = chat.chat_id
-        #             self.logger.debug ("- - bye on chatid={}".format(chat_id))
-        #             s.delete_instance()
-
-        #             try:
-        #                 bot.sendMessage(chat_id=chat_id, text=message)
-        #             except TelegramError as e:
-        #                 self.logger.info("Couldn't send unsubscription notice of {} to chat {}: {}".format(
-        #                     tw_user.screen_name, chat_id, e.message
-        #                 ))
-
-        #                 delet_this = None
-
-        #                 if e.message == 'Bad Request: group chat was migrated to a supergroup chat':
-        #                     delet_this = True
-
-        #                 if e.message == "Unauthorized":
-        #                     delet_this = True
-
-        #                 if delet_this:
-        #                     self.logger.info("Marking chat for deletion")
-        #                     chat.delete_soon = True
-        #                     chat.save()
-
-        #     self.logger.debug("- Cleaning up TwitterUser @{}".format(tw_user.screen_name, reason))
-        #     tw_user.delete_instance()
-
-        #     self.logger.debug ("- Cleanup finished")
 
         self.logger.debug("Cleaning up TelegramChats marked for deletion")
         for chat in TelegramChat.select().where(TelegramChat.delete_soon == True):

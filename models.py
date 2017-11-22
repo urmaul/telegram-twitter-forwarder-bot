@@ -7,24 +7,6 @@ from playhouse.migrate import migrate, SqliteMigrator, SqliteDatabase
 from tweepy.auth import OAuthHandler
 
 
-class TwitterUser(Model):
-    screen_name = CharField(unique=True)
-    known_at = DateTimeField(default=datetime.datetime.now)
-    name = CharField()
-    last_fetched = DateTimeField(default=datetime.datetime.now)
-
-    @property
-    def full_name(self):
-        return "{} ({})".format(self.name, self.screen_name)
-
-    @property
-    def last_tweet_id(self):
-        if self.tweets.count() == 0:
-            return 0
-
-        return self.tweets.order_by(Tweet.tw_id.desc()).first().tw_id
-
-
 class TelegramChat(Model):
     chat_id = IntegerField(unique=True)
     known_at = DateTimeField(default=datetime.datetime.now)
@@ -55,17 +37,11 @@ class TelegramChat(Model):
         return tweepy.API(auth)
 
 
-    # tg_chat = ForeignKeyField(TelegramChat, related_name="subscriptions")
-    # tw_user = ForeignKeyField(TwitterUser, related_name="subscriptions")
-    # known_at = DateTimeField(default=datetime.datetime.now)
-
-
 class Tweet(Model):
     tw_id = BigIntegerField(unique=True)
     known_at = DateTimeField(default=datetime.datetime.now)
     text = TextField()
     created_at = DateTimeField()
-    # twitter_user = ForeignKeyField(TwitterUser, related_name='tweets')
     twitter_user_name = TextField(default='')
     twitter_user_screen_name = TextField(default='')
     photo_url = TextField(default='')

@@ -31,11 +31,7 @@ def cmd_help(bot, update, chat=None):
         bot.reply(update, """
 Hello! This bot forwards you updates from twitter streams!
 Here's the commands:
-- /sub - subscribes to updates from users
-- /unsub - unsubscribes from users
-- /list  - lists current subscriptions
 - /export - sends you a /sub command that contains all current subscriptions
-- /all - shows you the latest tweets from all subscriptions
 - /wipe - remove all the data about you and your subscriptions
 - /auth - start Twitter authorization process
 - /verify - send Twitter verifier code to complete authorization process
@@ -62,34 +58,6 @@ def cmd_source(bot, update, chat=None):
     bot.reply(update, "This bot is Free Software under the LGPLv3. "
                     "You can get the code from here: "
                     "https://github.com/franciscod/telegram-twitter-forwarder-bot")
-
-
-# @with_touched_chat
-# def cmd_all(bot, update, chat=None):
-#     subscriptions = list(Subscription.select().where(
-#                          Subscription.tg_chat == chat))
-
-#     if len(subscriptions) == 0:
-#         return bot.reply(update, 'You have no subscriptions, so no tweets to show!')
-
-#     text = ""
-
-#     for sub in subscriptions:
-#         if sub.last_tweet is None:
-#             text += "\n{screen_name}: <no tweets yet>".format(
-#                 screen_name=escape_markdown(sub.tw_user.screen_name),
-#             )
-#         else:
-#             text += ("\n{screen_name}:\n{text} "
-#                      "[link](https://twitter.com/{screen_name}/status/{tw_id})").format(
-#                 text=markdown_twitter_usernames(escape_markdown(sub.last_tweet.text)),
-#                 tw_id=sub.last_tweet.tw_id,
-#                 screen_name=escape_markdown(sub.tw_user.screen_name),
-#             )
-
-#     bot.reply(update, text,
-#               disable_web_page_preview=True,
-#               parse_mode=telegram.ParseMode.MARKDOWN)
 
 
 @with_touched_chat
