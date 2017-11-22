@@ -5,6 +5,19 @@ Hello! This projects aims to make a [Telegram](https://telegram.org) bot that fo
 
 You can check it on Telegram: [@TwitterForwarderBot](https://telegram.me/TwitterForwarderBot)
 
+---
+
+In this fork I was mostly removing features. Now bot doesn't store information of your subscriptions. Instead it requires you to login via twitter and then just forwards your home timeline to telegram.
+
+Differences in this fork:
+* Login via twitter is required.
+* Subscriptions  list always matches your twitter subscriptions.
+* You don't receive mention tweets from your subscriptions anymore.
+* Extended tweet format is used.
+* Small updates in telegram message format.
+
+---
+
 #### Credit where credit is due
 
 This is based on former work:
