@@ -14,4 +14,5 @@ ENV TWITTER_ACCESS_TOKEN_SECRET=
 RUN mkdir /app
 COPY *.py /app/
 
+WORKDIR /app
 CMD python3 /app/main.py
