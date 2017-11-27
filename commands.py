@@ -37,7 +37,7 @@ Here's the commands:
 - /set\_timezone - set your [timezone name]({}) (for example Asia/Tokyo)
 - /source - info about source code
 - /help - view help text
-This bot is being worked on, so it may break sometimes. Contact @franciscod if you want {}
+This bot is being worked on, so it may break sometimes. Maker of original bot @franciscod cares, I don't {}
 """.format(
             TIMEZONE_LIST_URL,
             Emoji.SMILING_FACE_WITH_OPEN_MOUTH_AND_SMILING_EYES),
@@ -55,6 +55,8 @@ def cmd_wipe(bot, update, chat=None):
 def cmd_source(bot, update, chat=None):
     bot.reply(update, "This bot is Free Software under the LGPLv3. "
                     "You can get the code from here: "
+                    "https://github.com/urmaul/telegram-twitter-forwarder-bot"
+                    "It's a fork of this bot: "
                     "https://github.com/franciscod/telegram-twitter-forwarder-bot")
 
 
