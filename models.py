@@ -7,7 +7,12 @@ from playhouse.migrate import migrate, SqliteMigrator, SqliteDatabase
 from tweepy.auth import OAuthHandler
 
 
-class TelegramChat(Model):
+db = SqliteDatabase('data/peewee.db', timeout=10)
+class BaseModel(Model):
+    class Meta:
+        database = db
+
+class TelegramChat(BaseModel):
     chat_id = IntegerField(unique=True)
     known_at = DateTimeField(default=datetime.datetime.now)
     tg_type = CharField()
@@ -37,7 +42,7 @@ class TelegramChat(Model):
         return tweepy.API(auth)
 
 
-class Tweet(Model):
+class Tweet(BaseModel):
     tw_id = BigIntegerField(unique=True)
     known_at = DateTimeField(default=datetime.datetime.now)
     text = TextField()
@@ -61,7 +66,6 @@ for t in (TelegramChat, Tweet):
 
 
 # Migrate new fields. TODO: think of some better migration mechanism
-db = SqliteDatabase('data/peewee.db', timeout=10)
 migrator = SqliteMigrator(db)
 operations = [
     migrator.add_column('tweet', 'photo_url', Tweet.photo_url),
