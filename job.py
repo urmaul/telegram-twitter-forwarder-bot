@@ -74,9 +74,9 @@ class FetchAndSendTweetsJob(Job):
                     "- Unknown exception, Status code {}".format(sc))
                 continue
 
-            sortet_tweets = sorted(tweets, key=lambda tweet: tweet.id)
+            sorted_tweets = sorted(tweets, key=lambda tweet: tweet.id)
 
-            for tweet in sortet_tweets:
+            for tweet in sorted_tweets:
                 self.logger.debug("- Got tweet #{}: {}".format(tweet.id, tweet.full_text))
                 
                 # Check if tweet contains media, else check if it contains a link to an image
@@ -84,6 +84,10 @@ class FetchAndSendTweetsJob(Job):
                 pattern = '[(%s)]$' % ')('.join(extensions)
                 photo_url = ''
                 tweet_text = html.unescape(tweet.full_text)
+
+                if hasattr(tweet, 'retweeted_status'):
+                    tweet_text = 'RT @' + tweet.retweeted_status.user.screen_name + ': ' + html.unescape(tweet.retweeted_status.full_text)
+
                 if 'media' in tweet.entities:
                     photo_url = tweet.entities['media'][0]['media_url_https']
                 else:
