@@ -78,7 +78,7 @@ class FetchAndSendTweetsJob(Job):
 
             for tweet in sorted_tweets:
                 self.logger.debug("- Got tweet #{}: {}".format(tweet.id, tweet.full_text))
-                
+
                 # Check if tweet contains media, else check if it contains a link to an image
                 extensions = ('.jpg', '.jpeg', '.png', '.gif')
                 pattern = '[(%s)]$' % ')('.join(extensions)
@@ -87,6 +87,10 @@ class FetchAndSendTweetsJob(Job):
 
                 if hasattr(tweet, 'retweeted_status'):
                     tweet_text = 'RT @' + tweet.retweeted_status.user.screen_name + ': ' + html.unescape(tweet.retweeted_status.full_text)
+
+                if hasattr(tweet, 'quoted_status'):
+                    pprint.pprint(tweet.quoted_status)
+                    tweet_text += "\n@" + tweet.quoted_status['user']['screen_name'] + ': ' + html.unescape(tweet.quoted_status['full_text'])
 
                 if 'media' in tweet.entities:
                     photo_url = tweet.entities['media'][0]['media_url_https']
