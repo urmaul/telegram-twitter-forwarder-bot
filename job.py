@@ -127,6 +127,10 @@ class FetchAndSendTweetsJob(Job):
                     link_url=link_url
                 )
 
+                # save the latest tweet sent to chat
+                self.logger.debug("- Setting id: {}".format(tweet.id))
+                tg_chat.last_tweet_id = tweet.id
+
                 bot.send_tweet(tg_chat, t)
 
             tg_chat.save()
