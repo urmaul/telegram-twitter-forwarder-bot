@@ -45,6 +45,7 @@ class Tweet(Model):
     twitter_user_name = TextField(default='')
     twitter_user_screen_name = TextField(default='')
     photo_url = TextField(default='')
+    video_url = TextField(default='')
 
     @property
     def screen_name(self):

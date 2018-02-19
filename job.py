@@ -82,6 +82,7 @@ class FetchAndSendTweetsJob(Job):
                 # Check if tweet contains media, else check if it contains a link to an image
                 extensions = ('.jpg', '.jpeg', '.png', '.gif')
                 pattern = '[(%s)]$' % ')('.join(extensions)
+                video_url = ''
                 photo_url = ''
                 tweet_text = html.unescape(tweet.full_text)
 
@@ -92,7 +93,10 @@ class FetchAndSendTweetsJob(Job):
                     pprint.pprint(tweet.quoted_status)
                     tweet_text += "\n@" + tweet.quoted_status['user']['screen_name'] + ': ' + html.unescape(tweet.quoted_status['full_text'])
 
-                if 'media' in tweet.entities:
+                if 'media' in tweet.extended_entities:
+                    video_url = tweet.extended_entities['media'][0]['video_info']['variants'][0]['url']
+                    tweet_text = tweet_text.replace(tweet.extended_entities['media'][0]['url'], '')
+                elif 'media' in tweet.entities:
                     photo_url = tweet.entities['media'][0]['media_url_https']
                 else:
                     for url_entity in tweet.entities['urls']:
@@ -100,8 +104,11 @@ class FetchAndSendTweetsJob(Job):
                         if re.search(pattern, expanded_url):
                             photo_url = expanded_url
                             break
+            
+                if video_url:
+                    self.logger.debug("- - Found video URL in tweet: " + video_url)
                 if photo_url:
-                    self.logger.debug("- - Found media URL in tweet: " + photo_url)
+                    self.logger.debug("- - Found photo URL in tweet: " + photo_url)
 
                 for url_entity in tweet.entities['urls']:
                     expanded_url = url_entity['expanded_url']
@@ -116,12 +123,9 @@ class FetchAndSendTweetsJob(Job):
                     # twitter_user=tweet.id,
                     twitter_user_name=tweet.author.name,
                     twitter_user_screen_name=tweet.author.screen_name,
-                    photo_url=photo_url
+                    photo_url=photo_url,
+                    video_url=video_url
                 )
-
-                # save the latest tweet sent to chat
-                self.logger.debug("- Setting id: {}".format(tweet.id))
-                tg_chat.last_tweet_id = tweet.id
 
                 bot.send_tweet(tg_chat, t)
 
