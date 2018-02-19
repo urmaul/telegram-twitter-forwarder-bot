@@ -84,32 +84,31 @@ class FetchAndSendTweetsJob(Job):
                 pattern = '[(%s)]$' % ')('.join(extensions)
                 video_url = ''
                 photo_url = ''
+                link_url = ''
                 tweet_text = html.unescape(tweet.full_text)
 
                 if hasattr(tweet, 'retweeted_status'):
-                    tweet_text = 'RT @' + tweet.retweeted_status.user.screen_name + ': ' + html.unescape(tweet.retweeted_status.full_text)
+                    tweet_text = u'\U0001F501' + ' @' + tweet.retweeted_status.user.screen_name + ': ' + html.unescape(tweet.retweeted_status.full_text)
 
                 if hasattr(tweet, 'quoted_status'):
-                    pprint.pprint(tweet.quoted_status)
-                    tweet_text += "\n@" + tweet.quoted_status['user']['screen_name'] + ': ' + html.unescape(tweet.quoted_status['full_text'])
+                    tweet_text += "\n" + u'\U0001F501' + ' @' + tweet.quoted_status['user']['screen_name'] + ': ' + html.unescape(tweet.quoted_status['full_text'])
+                    tweet.entities['urls'] = []
 
-                if 'media' in tweet.extended_entities:
-                    video_url = tweet.extended_entities['media'][0]['video_info']['variants'][0]['url']
-                    tweet_text = tweet_text.replace(tweet.extended_entities['media'][0]['url'], '')
-                elif 'media' in tweet.entities:
-                    photo_url = tweet.entities['media'][0]['media_url_https']
-                else:
-                    for url_entity in tweet.entities['urls']:
-                        expanded_url = url_entity['expanded_url']
-                        if re.search(pattern, expanded_url):
-                            photo_url = expanded_url
-                            break
+                if hasattr(tweet, 'extended_entities') and 'media' in tweet.extended_entities:
+                    first_media = tweet.extended_entities['media'][0]                    
+                    tweet_text = tweet_text.replace(first_media['url'], '')
+                    if 'video_info' in first_media:
+                        video_url = first_media['video_info']['variants'][0]['url']
+                    else:
+                        photo_url = first_media['media_url_https']
+                elif tweet.entities['urls']:
+                    link_url = tweet.entities['urls'][0]['expanded_url']
             
                 if video_url:
                     self.logger.debug("- - Found video URL in tweet: " + video_url)
                 if photo_url:
                     self.logger.debug("- - Found photo URL in tweet: " + photo_url)
-
+                
                 for url_entity in tweet.entities['urls']:
                     expanded_url = url_entity['expanded_url']
                     indices = url_entity['indices']
@@ -124,7 +123,8 @@ class FetchAndSendTweetsJob(Job):
                     twitter_user_name=tweet.author.name,
                     twitter_user_screen_name=tweet.author.screen_name,
                     photo_url=photo_url,
-                    video_url=video_url
+                    video_url=video_url,
+                    link_url=link_url
                 )
 
                 bot.send_tweet(tg_chat, t)
