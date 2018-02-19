@@ -32,9 +32,11 @@ class TwitterForwarderBot(Bot):
             Use a soft-hyphen to put an invisible link to the first
             image in the tweet, which will then be displayed as preview
             '''
-            photo_url = ''
+            media_url = ''
+            if tweet.video_url:
+                media_url = '[\xad](%s)' % tweet.video_url
             if tweet.photo_url:
-                photo_url = '[\xad](%s)' % tweet.photo_url
+                media_url = '[\xad](%s)' % tweet.photo_url
 
             created_dt = utc.localize(tweet.created_at)
             if chat.timezone_name is not None:
@@ -43,14 +45,13 @@ class TwitterForwarderBot(Bot):
             created_at = created_dt.strftime('%Y-%m-%d %H:%M:%S %Z')
             self.sendMessage(
                 chat_id=chat.chat_id,
-                disable_web_page_preview=not photo_url,
+                disable_web_page_preview=not media_url,
                 text="""
-{link_preview}*{name}* ([@{screen_name}](https://twitter.com/{screen_name})):
+{link_preview}*{name}* ([@{screen_name}](https://twitter.com/{screen_name}/status/{tw_id})):
 {text}
--- [{created_at}](https://twitter.com/{screen_name}/status/{tw_id})
 """
                     .format(
-                    link_preview=photo_url,
+                    link_preview=media_url,
                     text=prepare_tweet_text(tweet.text),
                     name=escape_markdown(tweet.name),
                     screen_name=tweet.screen_name,
@@ -58,7 +59,7 @@ class TwitterForwarderBot(Bot):
                     tw_id=tweet.tw_id,
                 ),
                 parse_mode=telegram.ParseMode.MARKDOWN)
-
+            
         except TelegramError as e:
             self.logger.info("Couldn't send tweet {} to chat {}: {}".format(
                 tweet.tw_id, chat.chat_id, e.message
