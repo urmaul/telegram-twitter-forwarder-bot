@@ -35,8 +35,10 @@ class TwitterForwarderBot(Bot):
             media_url = ''
             if tweet.video_url:
                 media_url = '[\xad](%s)' % tweet.video_url
-            if tweet.photo_url:
+            elif tweet.photo_url:
                 media_url = '[\xad](%s)' % tweet.photo_url
+            elif tweet.link_url:
+                media_url = '[\xad](%s)' % tweet.link_url
 
             created_dt = utc.localize(tweet.created_at)
             if chat.timezone_name is not None:
