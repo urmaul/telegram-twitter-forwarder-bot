@@ -98,7 +98,8 @@ class FetchAndSendTweetsJob(Job):
                     first_media = tweet.extended_entities['media'][0]                    
                     tweet_text = tweet_text.replace(first_media['url'], '')
                     if 'video_info' in first_media:
-                        video_url = first_media['video_info']['variants'][0]['url']
+                        video_urls = first_media['video_info']['variants']
+                        video_url = max([video for video in video_urls if ('bitrate') in d ],key=lambda x:x['bitrate'])['url']
                     else:
                         photo_url = first_media['media_url_https']
                 elif tweet.entities['urls']:
