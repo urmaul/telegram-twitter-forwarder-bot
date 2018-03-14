@@ -4,7 +4,6 @@ from datetime import datetime
 from pytz import timezone
 from pytz.exceptions import UnknownTimeZoneError
 import telegram
-from telegram.emoji import Emoji
 import tweepy
 from tweepy.auth import OAuthHandler
 from tweepy.error import TweepError
@@ -40,7 +39,7 @@ Here's the commands:
 This bot is being worked on, so it may break sometimes. Maker of original bot @franciscod cares, I don't {}
 """.format(
             TIMEZONE_LIST_URL,
-            Emoji.SMILING_FACE_WITH_OPEN_MOUTH_AND_SMILING_EYES),
+            u'\U0001F604'),
                   disable_web_page_preview=True,
                   parse_mode=telegram.ParseMode.MARKDOWN)
 
