@@ -33,7 +33,6 @@ class FetchAndSendTweetsJob():
                     self.logger.debug(
                         "Fetching new tweets from {}".format(tg_chat.last_tweet_id))
                     tweets = tw_api.home_timeline(since_id=tg_chat.last_tweet_id, tweet_mode='extended')
-                    self.logger.debug("{} tweets found".format(len(tweets)))
             except tweepy.error.TweepError as e:
                 sc = e.response.status_code
                 if sc == 429:
@@ -77,7 +76,8 @@ class FetchAndSendTweetsJob():
             t.text = u'\U0001F501' + ' @' + tweet.retweeted_status.user.screen_name + ': ' + html.unescape(tweet.retweeted_status.full_text)
 
         if hasattr(tweet, 'quoted_status'):
-            t.text += "\n" + u'\U0001F501' + ' @' + tweet.quoted_status['user']['screen_name'] + ': ' + html.unescape(tweet.quoted_status['full_text'])
+            t.text = re.sub(r' https://t\.co/[1-9a-zA-Z]+$', r'', t.text) + "\n"
+            t.text += u'\U0001F501' + ' @' + tweet.quoted_status['user']['screen_name'] + ': ' + html.unescape(tweet.quoted_status['full_text'])
             tweet.entities['urls'] = []
             if 'extended_entities' in tweet.quoted_status:
                 self.parse_tweet_media(t, tweet.quoted_status['extended_entities'])
