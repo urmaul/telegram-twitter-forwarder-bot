@@ -100,7 +100,7 @@ class FetchAndSendTweetsJob():
             tweet.text = tweet.text.replace(entity['url'], '')
             if 'video_info' in entity:
                 video_urls = entity['video_info']['variants']
-                video_url = max([video for video in video_urls if ('bitrate') in d ],key=lambda x:x['bitrate'])['url']
+                video_url = max([video for video in video_urls if ('bitrate') in video],key=lambda x:x['bitrate'])['url']
                 tweet.media_list.append(Media('video', video_url))
                 self.logger.debug("- - Found video URL in tweet: " + video_url)
             else:
