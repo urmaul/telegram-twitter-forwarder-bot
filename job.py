@@ -75,8 +75,6 @@ class FetchAndSendTweetsJob():
 
         if hasattr(tweet, 'retweeted_status'):
             t.text = u'\U0001F501' + ' @' + tweet.retweeted_status.user.screen_name + ': ' + html.unescape(tweet.retweeted_status.full_text)
-            if hasattr(tweet.retweeted_status, 'extended_entities'):
-                self.parse_tweet_media(t, tweet.retweeted_status.extended_entities)
 
         if hasattr(tweet, 'quoted_status'):
             t.text += "\n" + u'\U0001F501' + ' @' + tweet.quoted_status['user']['screen_name'] + ': ' + html.unescape(tweet.quoted_status['full_text'])
