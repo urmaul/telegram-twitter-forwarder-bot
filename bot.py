@@ -12,7 +12,7 @@ from util import escape_markdown, prepare_tweet_text
 
 class TwitterForwarderBot(Bot):
     MESSAGE_TEMPLATE="""
-{link_preview}*{name}* ([@{screen_name}](https://twitter.com/{screen_name}/status/{tw_id})):
+{link_preview}*{name}* ([@{screen_name}](https://twitter.com/{screen_name}/status/{id})):
 {text}
 """
 
@@ -50,7 +50,7 @@ class TwitterForwarderBot(Bot):
                     text=prepare_tweet_text(tweet.text),
                     name=escape_markdown(tweet.user_name),
                     screen_name=tweet.user_screen_name,
-                    tw_id=tweet.id,
+                    id=tweet.id,
                 ),
                 parse_mode=telegram.ParseMode.MARKDOWN
             )
@@ -63,7 +63,7 @@ class TwitterForwarderBot(Bot):
             
         except TelegramError as e:
             self.logger.info("Couldn't send tweet {} to chat {}: {}".format(
-                tweet.tw_id, chat.chat_id, e.message
+                tweet.id, chat.chat_id, e.message
             ))
 
             delet_this = None

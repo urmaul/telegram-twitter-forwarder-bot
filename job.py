@@ -33,7 +33,6 @@ class FetchAndSendTweetsJob():
                     self.logger.debug(
                         "Fetching new tweets from {}".format(tg_chat.last_tweet_id))
                     tweets = tw_api.home_timeline(since_id=tg_chat.last_tweet_id, tweet_mode='extended')
-                    self.logger.debug("{} tweets found".format(len(tweets)))
             except tweepy.error.TweepError as e:
                 sc = e.response.status_code
                 if sc == 429:
@@ -74,12 +73,11 @@ class FetchAndSendTweetsJob():
        )
 
         if hasattr(tweet, 'retweeted_status'):
-            t.text = u'\U0001F501' + ' @' + tweet.retweeted_status.user.screen_name + ': ' + html.unescape(tweet.retweeted_status.full_text)
-            if hasattr(tweet.retweeted_status, 'extended_entities'):
-                self.parse_tweet_media(t, tweet.retweeted_status.extended_entities)
+            t.text = u'\u267B' + ' @' + tweet.retweeted_status.user.screen_name + ': ' + html.unescape(tweet.retweeted_status.full_text)
 
         if hasattr(tweet, 'quoted_status'):
-            t.text += "\n" + u'\U0001F501' + ' @' + tweet.quoted_status['user']['screen_name'] + ': ' + html.unescape(tweet.quoted_status['full_text'])
+            t.text = re.sub(r' https://t\.co/[1-9a-zA-Z]+$', r'', t.text) + "\n"
+            t.text += u'\u267B' + ' @' + tweet.quoted_status['user']['screen_name'] + ': ' + html.unescape(tweet.quoted_status['full_text'])
             tweet.entities['urls'] = []
             if 'extended_entities' in tweet.quoted_status:
                 self.parse_tweet_media(t, tweet.quoted_status['extended_entities'])
@@ -102,7 +100,7 @@ class FetchAndSendTweetsJob():
             tweet.text = tweet.text.replace(entity['url'], '')
             if 'video_info' in entity:
                 video_urls = entity['video_info']['variants']
-                video_url = max([video for video in video_urls if ('bitrate') in d ],key=lambda x:x['bitrate'])['url']
+                video_url = max([video for video in video_urls if ('bitrate') in video],key=lambda x:x['bitrate'])['url']
                 tweet.media_list.append(Media('video', video_url))
                 self.logger.debug("- - Found video URL in tweet: " + video_url)
             else:
